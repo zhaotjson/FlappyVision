@@ -1,0 +1,156 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "Reality Composer Pro Version 1.0 (409.100.15)"
+    }
+    defaultPrim = "block"
+    metersPerUnit = 1
+    upAxis = "Y"
+)
+
+def Xform "block"
+{
+    quatf xformOp:orient = (1, 0, 0, 0)
+    float3 xformOp:scale = (1, 1, 1)
+    float3 xformOp:translate = (0, 0, 0)
+    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+    def Cube "Cube" (
+        active = true
+        prepend apiSchemas = ["MaterialBindingAPI"]
+    )
+    {
+        reorder nameChildren = ["Smooth_Concrete", "DefaultMaterial"]
+        rel material:binding = </block/Cube/Smooth_Concrete> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        double size = 0.2
+        quatf xformOp:orient = (1, 0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        float3 xformOp:translate = (0, 0, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+        def Material "DefaultMaterial"
+        {
+            token outputs:mtlx:surface.connect = </block/Cube/DefaultMaterial/PreviewSurface.outputs:out>
+            token outputs:realitykit:vertex
+            token outputs:surface.connect = </block/Cube/DefaultMaterial/DefaultSurfaceShader.outputs:surface>
+            float2 ui:nodegraph:realitykit:subgraphOutputs:pos = (0, 109.5)
+            float2 ui:nodegraph:realitykit:subgraphOutputs:size = (181.5, 99)
+
+            def Shader "DefaultSurfaceShader" (
+                active = false
+            )
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (1, 0.47090173, 0.30332822) (
+                    colorSpace = "srgb_displayp3"
+                )
+                float inputs:roughness = 0.75
+                token outputs:surface
+            }
+
+            def Shader "PreviewSurface" (
+                active = true
+            )
+            {
+                uniform token info:id = "ND_UsdPreviewSurface_surfaceshader"
+                token outputs:out
+                float2 ui:nodegraph:node:pos = (-255, 105)
+                float2 ui:nodegraph:node:size = (148.5, 199)
+            }
+        }
+
+        def "Smooth_Concrete" (
+            active = true
+            prepend references = @SmoothConcrete.usdz@
+        )
+        {
+            color3f inputs:Basecolor_Tint = (0.8477972, 0.6119526, 0.47143415) (
+                colorSpace = "srgb_displayp3"
+                customData = {
+                    dictionary realitykit = {
+                        float2 positionInSubgraph = (-56.812614, 67.17455)
+                        float2 sizeInSubgraph = (160.5, 53)
+                        int stackingOrderInSubgraph = 2344
+                    }
+                }
+            )
+            float2 inputs:UV_Scale (
+                customData = {
+                    dictionary realitykit = {
+                        float2 positionInSubgraph = (-725.2588, 351.55255)
+                        float2 sizeInSubgraph = (138.5, 53)
+                        int stackingOrderInSubgraph = 2272
+                    }
+                }
+            )
+            float2 ui:nodegraph:realitykit:subgraphOutputs:size = (181.5, 99)
+            quatf xformOp:orient = (1, 0, 0, 0)
+            float3 xformOp:scale = (1, 1, 1)
+            float3 xformOp:translate = (0, 0, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+            over "Dot"
+            {
+                float2 ui:nodegraph:node:size = (44, 18)
+            }
+
+            over "multiply"
+            {
+                float2 ui:nodegraph:node:size = (60, 36)
+            }
+
+            over "add"
+            {
+                float2 ui:nodegraph:node:size = (61.5, 36.5)
+            }
+
+            over "PreviewSurface"
+            {
+                float2 ui:nodegraph:node:size = (148.5, 199)
+            }
+
+            over "Mix"
+            {
+                float2 ui:nodegraph:node:size = (109, 145)
+            }
+
+            over "Swizzle"
+            {
+                float2 ui:nodegraph:node:size = (133.5, 40)
+            }
+
+            over "Swizzle_1"
+            {
+                float2 ui:nodegraph:node:size = (145.5, 53)
+            }
+
+            over "Multiply_1"
+            {
+                float2 ui:nodegraph:node:size = (60, 36)
+            }
+
+            over "BaseColor"
+            {
+                float2 ui:nodegraph:node:size = (158.5, 235)
+            }
+
+            over "Roughness"
+            {
+                float2 ui:nodegraph:node:size = (158.5, 235)
+            }
+
+            over "Metallic"
+            {
+                float2 ui:nodegraph:node:size = (158.5, 235)
+            }
+
+            over "Normal"
+            {
+                float2 ui:nodegraph:node:size = (158.5, 235)
+            }
+        }
+    }
+}
+
