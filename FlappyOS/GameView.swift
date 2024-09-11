@@ -12,13 +12,6 @@ import RealityKitContent
 
 struct GameView: View {
     
-    
-    
-    //Offset Counter
-    @State private var poleOffset: Float = 0.0
-    
-    
-    
     @EnvironmentObject var poleSettings: PoleSettings
     @Environment(\.openWindow) var openWindow
     
@@ -30,19 +23,21 @@ struct GameView: View {
     let poleHeightRange: ClosedRange<Float> = 0.15...1.35
     let totalHeight: Float = 1.5
     let maxGapDeviation: Float = 0.5  // Maximum deviation for gap position
-    let verticalShift: Float = 1    // Amount to shift vertically
+    let verticalShift: Float = 1      // Amount to shift vertically
+    
+    @State private var poleOffset: Float = -2.5   // Track how much the poles have moved to the left
+    @State private var poleEntities: [Entity] = [] // To keep track of pole entities
+    @State private var animationTimer: Timer? = nil // Timer for continuous updates
     
     var body: some View {
         RealityView { content in
-            
-            
-            
             /*
              Generate Poles
              */
             var previousGapCenterY: Float? = nil
             var firstPoleXPosition: Float = 0
-            
+            poleEntities.removeAll() // Clear previous poles
+
             for i in 0..<numberOfPoles {
                 var gapCenterY: Float
                 
@@ -57,38 +52,29 @@ struct GameView: View {
                 
                 previousGapCenterY = gapCenterY
                 
-                // Use scaleFactor in scaling
                 let bottomPoleHeight = (gapCenterY - (gapHeight / 2))
                 let topPoleHeight = (totalHeight - gapCenterY - (gapHeight / 2))
                 
-                print(bottomPoleHeight)
-                print(topPoleHeight)
-                
                 guard let bottomPole = await createPole(
                     scale: [poleWidth, bottomPoleHeight * 5, poleWidth],
-                    translation: [Float(i) * poleSpacing, bottomPoleHeight / 2 + verticalShift, -1] // Shift up
+                    translation: [Float(i) * poleSpacing, bottomPoleHeight / 2 + verticalShift, -1] // No offset initially
                 ) else {
                     continue
                 }
                 
                 guard let topPole = await createPole(
                     scale: [poleWidth, topPoleHeight * 5, poleWidth],
-                    translation: [Float(i) * poleSpacing, totalHeight - topPoleHeight / 2 + verticalShift, -1] // Shift up
+                    translation: [Float(i) * poleSpacing, totalHeight - topPoleHeight / 2 + verticalShift, -1] // No offset initially
                 ) else {
                     continue
                 }
                 
-                
-                
+                // Add poles to the content and track them
                 content.add(bottomPole)
                 content.add(topPole)
+                poleEntities.append(bottomPole)
+                poleEntities.append(topPole)
             }
-            
-            
-            
-            
-            
-            
             
             // Display Bird
             guard let bird = await createBird() else {
@@ -98,10 +84,7 @@ struct GameView: View {
             bird.name = "Bird"
             content.add(bird)
             
-            
-            
             // Display Walls
-            
             guard let botWall = await createWall() else {
                 return
             }
@@ -114,36 +97,55 @@ struct GameView: View {
             topWall.transform.translation = [0, 1.5 + verticalShift, -1]
             content.add(topWall)
             
-            
-            
-            
-            
             // Display Skybox
             guard let skyBox = createSkyBox() else {
                 return
             }
             content.add(skyBox)
             
-            
-            
-            
-            
-            
-            
         } update: { content in
-            // Update pole based on height variable
-            // updatePole(with: poleSettings.height, content: content)
+            // Nothing needed here for now
         }
-        .onAppear(perform: {
-            // Display height selector
-            // openWindow(id: "Height Selector")
-        })
+        .onAppear {
+            startPoleMovement() // Start movement after the view appears
+        }
+        .onDisappear {
+            stopPoleMovement() // Stop movement when view disappears
+        }
     }
+    
+    /*
+     
+     PRIVATE FUNCTIONS
+     
+     */
+    
+    private func startPoleMovement() {
+        // Start the animation timer to trigger pole updates every 16ms (approx 60 FPS)
+        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { _ in
+            // Increment the offset to move poles
+            poleOffset += 0.005
+
+            // Update each pole's position based on the current offset
+            Task {
+                await MainActor.run {
+                    for (index, pole) in poleEntities.enumerated() {
+                        let newX = Float(index / 2) * poleSpacing - poleOffset
+                        pole.transform.translation.x = newX
+                    }
+                }
+            }
+        }
+    }
+    
+    private func stopPoleMovement() {
+        // Stop the timer when movement is no longer needed
+        animationTimer?.invalidate()
+        animationTimer = nil
+    }
+    
+    // Rest of your code (createSkyBox, createBird, createPole, createWall, etc.) remains unchanged.
 }
-
-
-
-
 
 
 
