@@ -19,7 +19,7 @@ struct GameView: View {
     let poleWidth: Float = 0.5
     let gapHeight: Float = 0.4
     let poleSpacing: Float = 0.5
-    let numberOfPoles: Int = 4
+    let numberOfPoles: Int = 10
     let poleHeightRange: ClosedRange<Float> = 0.15...1.35
     let totalHeight: Float = 1.5
     let maxGapDeviation: Float = 0.5  // Maximum deviation for gap position
@@ -121,22 +121,40 @@ struct GameView: View {
      */
     
     private func startPoleMovement() {
+        let removalThreshold: Float = -1.5 // Threshold for removing poles once they move too far left
+        
         // Start the animation timer to trigger pole updates every 16ms (approx 60 FPS)
         animationTimer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { _ in
             // Increment the offset to move poles
             poleOffset += 0.005
-
-            // Update each pole's position based on the current offset
+            
             Task {
                 await MainActor.run {
+                    // Track the indices of poles that should be removed
+                    var polesToRemove: [Int] = []
+                    
+                    // Update each pole's position individually
                     for (index, pole) in poleEntities.enumerated() {
-                        let newX = Float(index / 2) * poleSpacing - poleOffset
+                        let newX = pole.transform.translation.x - 0.005 // Move left based on poleOffset
                         pole.transform.translation.x = newX
+                        
+                        // Check if the pole's x position is below the removal threshold
+                        if newX < removalThreshold {
+                            polesToRemove.append(index)
+                        }
+                    }
+                    
+                    // Remove individual poles that have moved past the threshold
+                    for index in polesToRemove.reversed() {
+                        poleEntities[index].removeFromParent()  // Remove from the scene
+                        poleEntities.remove(at: index)          // Remove from the tracking array
                     }
                 }
             }
         }
     }
+
+
     
     private func stopPoleMovement() {
         // Stop the timer when movement is no longer needed
