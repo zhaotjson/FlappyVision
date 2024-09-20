@@ -72,21 +72,26 @@ struct GameView: View {
                 stopPoleMovement()
                 stopGravity()
             }
-            .allowsHitTesting(false)
+            .allowsHitTesting(false) // Disable hit testing for RealityView
             .zIndex(0)
-            
-            Button(action: {
-                handleTap()
-            }) {
-                Text("Tap Here")
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.clear)  // Semi-transparent so you can still see underlying content
-            .contentShape(Rectangle())
-            .zIndex(1)
 
+            // Button overlay on top of RealityView
+            GeometryReader { geometry in
+                Button(action: {
+                    handleTap()
+                }) {
+                    Color.clear // Make the button area clear
+                }
+                .frame(width: geometry.size.width, height: geometry.size.height) // Full-screen button
+                .contentShape(Rectangle()) // Ensure the whole area is tappable
+                .offset(y: -CGFloat(verticalShift * 2250)) // Translate button upwards by verticalShift
+                .offset(z: -CGFloat(2000))
+                .zIndex(1) // Ensure button is on top
+            }
+            .zIndex(1) // Ensure GeometryReader is on top as well
         }
     }
+
     
     /*
      
